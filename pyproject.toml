@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "honest-quant"
+version = "0.1.0"
+description = "Measure how quantization affects a local model's honesty/calibration, not just speed."
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "insomniac-asif" }]
+requires-python = ">=3.10"
+keywords = ["llm", "quantization", "calibration", "ece", "auroc", "ollama", "evaluation"]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "numpy>=1.23",
+    "matplotlib>=3.6",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0"]
+
+[project.urls]
+Homepage = "https://github.com/insomniac-asif/honest-quant"
+Repository = "https://github.com/insomniac-asif/honest-quant"
+
+[project.scripts]
+honest-quant = "honest_quant.run:main"
+
+[tool.setuptools]
+packages = ["honest_quant"]
+
+[tool.setuptools.package-data]
+honest_quant = ["data/*.jsonl"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

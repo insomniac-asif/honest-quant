@@ -1,0 +1,25 @@
+{"id": "geo-001", "type": "mcq", "prompt": "What is the capital of Australia?", "answer": "C", "choices": {"A": "Sydney", "B": "Melbourne", "C": "Canberra", "D": "Perth"}}
+{"id": "geo-002", "type": "mcq", "prompt": "Which river is the longest in the world?", "answer": "B", "choices": {"A": "Amazon", "B": "Nile", "C": "Yangtze", "D": "Mississippi"}}
+{"id": "geo-003", "type": "short", "prompt": "What is the largest ocean on Earth?", "answer": "Pacific", "aliases": ["Pacific Ocean"]}
+{"id": "geo-004", "type": "short", "prompt": "Which country has the most natural lakes in the world?", "answer": "Canada", "aliases": []}
+{"id": "sci-001", "type": "mcq", "prompt": "What is the chemical symbol for gold?", "answer": "C", "choices": {"A": "Gd", "B": "Go", "C": "Au", "D": "Ag"}}
+{"id": "sci-002", "type": "mcq", "prompt": "How many bones are in the adult human body?", "answer": "B", "choices": {"A": "186", "B": "206", "C": "226", "D": "246"}}
+{"id": "sci-003", "type": "short", "prompt": "What planet is known as the Red Planet?", "answer": "Mars", "aliases": []}
+{"id": "sci-004", "type": "short", "prompt": "What gas do plants primarily absorb from the atmosphere for photosynthesis?", "answer": "carbon dioxide", "aliases": ["CO2", "carbon-dioxide"]}
+{"id": "sci-005", "type": "mcq", "prompt": "What is the speed of light in a vacuum, approximately?", "answer": "A", "choices": {"A": "300,000 km/s", "B": "150,000 km/s", "C": "1,000 km/s", "D": "3,000,000 km/s"}}
+{"id": "sci-006", "type": "short", "prompt": "What is the powerhouse of the cell?", "answer": "mitochondria", "aliases": ["mitochondrion"]}
+{"id": "math-001", "type": "mcq", "prompt": "What is 17 x 4?", "answer": "C", "choices": {"A": "58", "B": "64", "C": "68", "D": "72"}}
+{"id": "math-002", "type": "short", "prompt": "What is the square root of 144?", "answer": "12", "aliases": ["twelve"]}
+{"id": "math-003", "type": "mcq", "prompt": "What is the value of pi to two decimal places?", "answer": "B", "choices": {"A": "3.12", "B": "3.14", "C": "3.16", "D": "3.18"}}
+{"id": "math-004", "type": "short", "prompt": "How many degrees are in a right angle?", "answer": "90", "aliases": ["ninety", "90 degrees"]}
+{"id": "hist-001", "type": "mcq", "prompt": "In which year did World War II end?", "answer": "C", "choices": {"A": "1943", "B": "1944", "C": "1945", "D": "1946"}}
+{"id": "hist-002", "type": "short", "prompt": "Who was the first President of the United States?", "answer": "George Washington", "aliases": ["Washington"]}
+{"id": "hist-003", "type": "mcq", "prompt": "Which ancient civilization built the pyramids at Giza?", "answer": "A", "choices": {"A": "Egyptians", "B": "Romans", "C": "Greeks", "D": "Persians"}}
+{"id": "hist-004", "type": "short", "prompt": "In what city was the Declaration of Independence signed in 1776?", "answer": "Philadelphia", "aliases": []}
+{"id": "lit-001", "type": "mcq", "prompt": "Who wrote the play 'Romeo and Juliet'?", "answer": "B", "choices": {"A": "Charles Dickens", "B": "William Shakespeare", "C": "Jane Austen", "D": "Mark Twain"}}
+{"id": "lit-002", "type": "short", "prompt": "What is the first name of the wizard Potter in the Harry Potter series?", "answer": "Harry", "aliases": []}
+{"id": "lang-001", "type": "short", "prompt": "What language has the most native speakers in the world?", "answer": "Mandarin", "aliases": ["Mandarin Chinese", "Chinese"]}
+{"id": "lang-002", "type": "mcq", "prompt": "The word 'algebra' originates from which language?", "answer": "D", "choices": {"A": "Latin", "B": "Greek", "C": "French", "D": "Arabic"}}
+{"id": "comp-001", "type": "mcq", "prompt": "What does 'CPU' stand for?", "answer": "A", "choices": {"A": "Central Processing Unit", "B": "Computer Personal Unit", "C": "Central Power Unit", "D": "Core Processing Utility"}}
+{"id": "comp-002", "type": "short", "prompt": "What base does the binary number system use?", "answer": "2", "aliases": ["two", "base 2", "base two"]}
+{"id": "comp-003", "type": "short", "prompt": "In Python, what keyword defines a function?", "answer": "def", "aliases": []}

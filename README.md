@@ -1,12 +1,18 @@
 # honest-quant
 
-**Does 4-bit quantization make your local model more confidently wrong? Measure it, don't guess.**
+**Your 4-bit model is faster. Is it also more confidently *wrong* — just as sure of itself while missing more often?**
+`honest-quant` measures that: it scores a local model's calibration (ECE / Brier / AUROC / confidently-wrong rate) across quant levels, fully offline, so you report a number instead of guessing.
 
-A small, reproducible harness that measures how quantization level affects a
-local model's **honesty and calibration** — not just its speed or perplexity.
-It reports **ECE**, **Brier score**, **AUROC** (does confidence track
-correctness?), and a **confidently-wrong rate** across quant levels like
-`q3_k_m`, `q4_k_m`, `q8_0`, and `fp16`.
+[![tests](https://img.shields.io/badge/tests-65%20passing-brightgreen)](#tests)
+[![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+[![python](https://img.shields.io/badge/python-3.10%2B-blue)](pyproject.toml)
+[![deps](https://img.shields.io/badge/deps-numpy%20%2B%20matplotlib-blue)](pyproject.toml)
+
+<p align="center">
+  <img src="assets/reliability.png" alt="honest-quant reliability diagram: stated confidence vs actual accuracy across quantization levels" width="720">
+</p>
+
+> Not zero-dep, and the badge says so: `numpy` does the metric math, `matplotlib` draws the reliability diagrams. The metric core and the offline demo need **neither a GPU nor a network**; only real cross-quant runs need a local [ollama](https://ollama.com).
 
 ---
 
@@ -17,7 +23,7 @@ When you quantize a local model, the usual questions are "how much faster?" and
 you in practice: a lower-bit model that is **just as sure of itself while being
 wrong more often**. A model that says *"Answer: B, Confidence: 95%"* and is wrong
 is far more dangerous than one that says *"Confidence: 40%"* — the second one is
-being honest about its own uncertainty.
+at least being honest about its own uncertainty.
 
 The hypothesis this repo lets you test:
 
@@ -27,7 +33,9 @@ The hypothesis this repo lets you test:
 
 This tool doesn't assert that. It gives you the harness to **measure it on your
 own model and report a number**, with the metric core unit-tested against
-hand-computed values so you can trust the math.
+hand-computed values so you can trust the math rather than the vibes. And the run
+that ships in this repo **refutes the naive version of that hypothesis** — see
+[Results](#results). That's the point of measuring instead of assuming.
 
 ## Install
 
@@ -37,9 +45,9 @@ cd honest-quant
 pip install -e .          # numpy + matplotlib, that's it
 ```
 
-Real cross-quant runs also need [ollama](https://ollama.com) running locally
-with the model tags you want to compare pulled. The metric core and the
-included demo need **neither a GPU nor a network**.
+Real cross-quant runs also need [ollama](https://ollama.com) running locally with
+the model tags you want to compare pulled. The metric core and the included demo
+run with no model and no network. Python 3.10+.
 
 ## Quickstart
 
@@ -54,16 +62,21 @@ print(f"ECE={report.ece:.3f}  AUROC={report.auroc:.3f}  "
       f"confidently-wrong={report.confident_error_rate:.3f}")
 ```
 
-## See it run with no model (offline demo)
+`evaluate` is pure Python over two arrays — bring confidences from *any* source
+(these, logprobs, a spreadsheet), not just the ollama path.
+
+## Example output
+
+No model required — the offline demo runs the real pipeline on simulated answers:
 
 ```bash
 python examples/demo_synthetic.py
 ```
 
-This simulates four quant levels (as toy answer generators where lower bits →
-lower accuracy but *higher* confidence) and runs them through the real
-pipeline. Example output — **these numbers are simulated, not measurements of
-any real model**, and exist only to show the shape of the result:
+It fakes four quant levels (as toy answer generators where lower bits → lower
+accuracy but *higher* confidence) and pushes them through the actual scoring code.
+Example output — **these numbers are simulated, not measurements of any real
+model**, and exist only to show the shape of the result:
 
 ```
 quant   n    acc    conf   ECE    brier  AUROC  conf-wrong
@@ -74,9 +87,10 @@ q8_0    120  0.767  0.797  0.094  0.182  0.520  0.133
 fp16    120  0.767  0.782  0.108  0.191  0.444  0.125
 ```
 
-Read it as: as the simulated model is quantized harder, accuracy drops **and**
-its confidence stays high, so **ECE and the confidently-wrong rate climb**.
-That divergence is exactly what the harness is designed to catch on a real model.
+Read it as: as the simulated model is quantized harder, accuracy drops **and** its
+confidence stays high, so **ECE and the confidently-wrong rate climb**. That
+divergence is exactly what the harness is built to catch on a real model — and,
+notably, is *not* what the real run below actually shows.
 
 ## Measuring a real model
 
@@ -85,17 +99,19 @@ That divergence is exactly what the harness is designed to catch on a real model
 python -m honest_quant.run --family qwen2.5:7b --quants q4_k_m,q8_0,fp16 --n 200
 ```
 
-For each quant it asks every question, elicits a verbalized confidence, grades
-the answer, and writes `results/<quant>.json` plus a `results/summary.json`. Tags
-are composed as `qwen2.5:7b-q4_K_M`, `qwen2.5:7b-q8_0`, etc. (override with your
-own tags via `--family`; unknown quant names pass through verbatim).
+For each quant it asks every question, elicits a verbalized confidence, grades the
+answer, and writes `results/<quant>.json` plus a `results/summary.json`. Tags are
+composed as `qwen2.5:7b-q4_K_M`, `qwen2.5:7b-q8_0`, etc. (override with your own
+tags via `--family`; unknown quant names pass through verbatim). The tag
+composition is a convenience, **not** a guarantee the tag exists in the ollama
+registry — pull and verify first.
 
 ## Results
 
 A real run is included: **llama3.2:3b-instruct** across four quant levels on **200
 [TruthfulQA MC1](https://github.com/sylinrl/TruthfulQA) questions** (verbalized
-confidence, temperature 0, fixed-seed choice shuffle). The committed summary + plot are
-in [`assets/`](assets/); raw per-question logs go to `results/` (git-ignored).
+confidence, temperature 0). The committed summary + plot
+are in [`assets/`](assets/); raw per-question logs go to `results/` (git-ignored).
 
 ![reliability diagrams per quant level](assets/reliability.png)
 
@@ -111,16 +127,16 @@ measuring.** On this model + benchmark, quantization did **not** make the model 
 confidently wrong. If anything the reverse: the lower-bit models were *less*
 overconfident, because their confidence fell along with their accuracy. The **most
 overconfident** level was **fp16** (overconfidence = mean_confidence − accuracy =
-0.214); the **best-calibrated** was **q4_K_M** (ECE 0.256), the common default. Every
-level is overconfident in absolute terms — all curves sit below the diagonal at high
-confidence — and AUROC is weak (~0.6) everywhere, so confidence barely separates right
-from wrong at *any* precision.
+0.214); the **best-calibrated** was **q4_K_M** (ECE 0.256), the common default.
+Every level is overconfident in absolute terms — all curves sit below the diagonal
+at high confidence — and AUROC is weak (~0.6) everywhere, so confidence barely
+separates right from wrong at *any* precision.
 
 Read it honestly: this is **one model, one benchmark (TruthfulQA MC1), n=200, one
-elicitation method, no confidence intervals** — the level-to-level ECE gaps are within
-the range sampling noise produces at this size. It's evidence that the "4-bit makes your
-model lie" story is **not automatic**, not a general law. Run it on *your* model and
-report *your* number instead of guessing.
+elicitation method, no confidence intervals** — the level-to-level ECE gaps are
+within the range sampling noise produces at this size. It's evidence that the
+"4-bit makes your model lie" story is **not automatic**, not a general law. Run it
+on *your* model and report *your* number instead of guessing.
 
 ### Reproduce
 
@@ -133,10 +149,8 @@ python -m honest_quant.run \
     --questions your_questions.jsonl --n 200 --out results
 ```
 
-Bring your own `--questions` JSONL (schema in `honest_quant/dataset.py`); the run above
-used 200 shuffled TruthfulQA MC1 items.
-
-Then render the reliability grid:
+Bring your own `--questions` JSONL (schema in `honest_quant/dataset.py`); the run
+above used 200 TruthfulQA MC1 items. Then render the reliability grid:
 
 ```python
 import json
@@ -157,11 +171,13 @@ The committed run summary + plot live in [`assets/`](assets/); the raw per-quest
 
 ## How it works
 
+Four small stages, one pure metric core:
+
 1. **Elicit** — each question is sent with a system prompt asking for an answer
-   plus an honest integer confidence (0–100). `parse_answer_and_confidence`
-   pulls both back out, tolerant of formatting drift.
-2. **Grade** — `dataset.grade_answer` scores MCQ answers (by choice letter or
-   text) and short answers (normalised, alias-aware) into `correct ∈ {0,1}`.
+   plus an honest integer confidence (0–100). `parse_answer_and_confidence` pulls
+   both back out, tolerant of formatting drift.
+2. **Grade** — `dataset.grade_answer` scores MCQ answers (by choice letter or text)
+   and short answers (normalised, alias-aware) into `correct ∈ {0,1}`.
 3. **Score** — `eval.evaluate` turns the `(confidence, correct)` arrays into:
    - **ECE / MCE** — calibration error via equal-width confidence bins.
    - **Brier** — proper scoring rule (calibration + sharpness).
@@ -171,19 +187,10 @@ The committed run summary + plot live in [`assets/`](assets/); the raw per-quest
      asserted at ≥ threshold (default 0.8). The headline honesty number.
 4. **Report** — `plot` renders a per-quant text table and reliability diagrams.
 
-The metric core (`honest_quant/eval.py`) is pure and has **no model/network
-dependency**, so it's fully unit-tested against hand-computed values in
-`tests/test_eval.py`.
-
-## Tests
-
-```bash
-pip install pytest
-python -m pytest -q
-```
-
-All 65 tests run with **no model, no network, and no GPU** — the ollama call is
-mocked and every metric is checked against values computed by hand.
+The metric core (`honest_quant/eval.py`) has **no model/network dependency**, so
+it's fully unit-tested against values computed by hand in `tests/test_eval.py`. The
+ollama call in `run.py` is mocked in the tests, which is why the whole suite is
+offline.
 
 ## Limitations
 
@@ -191,24 +198,34 @@ mocked and every metric is checked against values computed by hand.
   (llama3.2:3b-instruct), a single benchmark (TruthfulQA MC1), n=200, verbalized
   confidence, no confidence intervals — level-to-level ECE gaps are within sampling
   noise. It shows the "4-bit lies more" story isn't automatic; it does not
-  generalise. The offline demo's numbers are separate and simulated (labelled as such).
-- **The bundled question set is a smoke set** (~25 general-knowledge items),
-  sized to wire the pipeline end-to-end — not a rigorous benchmark. Bring your
-  own `--questions file.jsonl` for real evaluation; ~200+ items is a reasonable
-  floor for stable ECE/AUROC.
-- **Verbalized confidence is one elicitation method, not ground truth.** Models
-  are often poor at self-reporting confidence, and the *number* depends on the
-  prompt. This measures calibration *of the elicited confidence*, which is what
-  a downstream user actually sees — but it is not the model's internal logit
-  probability. (Token-logprob-based confidence is a natural future addition.)
-- **ECE is binning-dependent.** Equal-width bins with few samples per bin are
-  noisy; the default is 10 bins. Report `--n` and `--bins` with any result.
+  generalise. The offline demo's numbers are separate and simulated (labelled so).
+- **The bundled question set is a smoke set** (~25 general-knowledge items), sized
+  to wire the pipeline end-to-end — not a rigorous benchmark. Bring your own
+  `--questions file.jsonl`; ~200+ items is a reasonable floor for stable ECE/AUROC.
+- **Verbalized confidence is one elicitation method, not ground truth.** Models are
+  often poor at self-reporting confidence, and the *number* depends on the prompt.
+  This measures calibration *of the elicited confidence* — what a downstream user
+  actually sees — not the model's internal logit probability. (Token-logprob
+  confidence is a natural future addition.)
+- **ECE is binning-dependent.** Equal-width bins with few samples per bin are noisy;
+  the default is 10 bins. Report `--n` and `--bins` with any result.
 - **AUROC is undefined when every answer is correct or every answer is wrong**
   (single class) and is returned as `nan`.
-- **Grading is automated and imperfect** for open-ended short answers; inspect
-  the per-question `results/<quant>.json` when a number looks off.
-- **Quant tag composition is a convenience**, not a guarantee a tag exists in
-  the ollama registry — pull and verify your tags.
+- **Grading is automated and imperfect** for open-ended short answers; inspect the
+  per-question `results/<quant>.json` when a number looks off.
+- **Quant tag composition is a convenience**, not proof a tag exists in the ollama
+  registry — pull and verify your tags.
+
+## Tests
+
+```bash
+pip install -e ".[dev]"   # pytest
+python -m pytest -q
+```
+
+65 tests, fully offline — **no model, no network, no GPU**. The ollama call is
+mocked; every metric in `tests/test_eval.py` is checked against a value computed by
+hand, so the math is pinned, not just exercised.
 
 ## License
 
